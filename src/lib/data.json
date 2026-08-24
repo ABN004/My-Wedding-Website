@@ -1,0 +1,42 @@
+{
+  "bride": {
+    "name": "Greeshma",
+    "father": "Gopalakrishnan K K",
+    "mother": "Rema Gopalakrishnan",
+    "address": "Kaikkolathuruth House, Arankavu, Chendamangalam"
+  },
+  "groom": {
+    "name": "Amal",
+    "father": "P G Balachandran Nair",
+    "mother": "Rekha Balachandran",
+    "address": "Sreenilayam Chendamangalam North Paravur"
+  },
+  "wedding": {
+    "events": [
+      {
+        "name": "Thalikettu",
+        "location": "Guruvayur temple",
+        "time": "6:00 AM - 7:00 AM",
+        "date": "01/11/2026",
+        "map_url": "https://maps.google.com/?q=Guruvayur+temple"
+      },
+      {
+        "name": "Wedding Function",
+        "location": "Nair samajam Hall Chendamangalam Paliyam",
+        "time": "10:30 AM onwards",
+        "date": "01/11/2026",
+        "map_url": "https://maps.google.com/?q=Nair+samajam+Hall+Chendamangalam+Paliyam"
+      }
+    ]
+  },
+  "wishes": [
+    {
+      "name": "Akhil & Avani",
+      "image": "/images/dummy-wish-1.png"
+    },
+    {
+      "name": "Reshma",
+      "image": "/images/dummy-wish-2.png"
+    }
+  ]
+}
