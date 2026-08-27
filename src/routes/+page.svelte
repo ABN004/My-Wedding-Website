@@ -12,7 +12,7 @@
 
   const title = `${jsonData.groom.name} & ${jsonData.bride.name} — Wedding Invitation`;
   const description = `With joyful hearts, ${jsonData.groom.name} and ${jsonData.bride.name} invite you to their wedding celebration at Guruvayur Temple on 01 November 2026.`;
-  const shareImage = `${$page.url.origin}/images/Loader_Logo.png`;
+  const shareImage = `${$page.url.origin}/images/Loader_Logo2.jpg`;
 </script>
 
 <svelte:head>
