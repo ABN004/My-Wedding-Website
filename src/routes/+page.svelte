@@ -12,7 +12,7 @@
 
   const title = `${jsonData.groom.name} & ${jsonData.bride.name} — Wedding Invitation`;
   const description = `With joyful hearts, ${jsonData.groom.name} and ${jsonData.bride.name} invite you to their wedding celebration at Guruvayur Temple on 01 November 2026.`;
-  const shareImage = `${$page.url.origin}/images/Loader_Logo2.jpg`;
+  const shareImage = `${$page.url.origin}/images/Loader_Logo3.jpg`;
 </script>
 
 <svelte:head>
@@ -30,7 +30,7 @@
   <meta property="og:image:secure_url" content={shareImage} />
   <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image:height" content="900" />
   <meta property="og:image:alt" content="Amal and Greeshma's wedding invitation" />
 
   <!-- Twitter -->
