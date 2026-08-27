@@ -1,4 +1,5 @@
 <script>
+  import { page } from '$app/stores';
   import Loader from '$lib/components/Loader.svelte';
   import Navbar from '$lib/components/Navbar.svelte';
   import Landing from '$lib/components/Landing.svelte';
@@ -9,9 +10,8 @@
 
   let { data } = $props();
 
-  const title = `${jsonData.bride.name} & ${jsonData.groom.name} - Wedding Invitation`;
-  const description = `Join us to celebrate the wedding of ${jsonData.bride.name} and ${jsonData.groom.name} on ${jsonData.wedding.events[0].date}.`;
-  const image = '/images/Loader_Logo.png';
+  const title = `${jsonData.groom.name} Weds ${jsonData.bride.name} - Wedding Invitation`;
+  const description = `Join us to celebrate the wedding of ${jsonData.groom.name} and ${jsonData.bride.name} on ${jsonData.wedding.events[0].date}.`;
 </script>
 
 <svelte:head>
@@ -23,13 +23,13 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:image" content={image} />
+  <meta property="og:image" content={`${$page.url.origin}/images/Loader_Logo.png`} />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content={image} />
+  <meta name="twitter:image" content={`${$page.url.origin}/images/Loader_Logo.png`} />
 </svelte:head>
 
 <Loader />
