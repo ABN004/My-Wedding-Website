@@ -10,26 +10,35 @@
 
   let { data } = $props();
 
-  const title = `${jsonData.groom.name} Weds ${jsonData.bride.name} - Wedding Invitation`;
-  const description = `Join us to celebrate the wedding of ${jsonData.groom.name} and ${jsonData.bride.name} on ${jsonData.wedding.events[0].date}.`;
+  const title = `${jsonData.groom.name} & ${jsonData.bride.name} — Wedding Invitation`;
+  const description = `With joyful hearts, ${jsonData.groom.name} and ${jsonData.bride.name} invite you to their wedding celebration at Guruvayur Temple on 01 November 2026.`;
+  const shareImage = `${$page.url.origin}/images/Loader_Logo.png`;
 </script>
 
 <svelte:head>
   <title>{title}</title>
 
   <meta name="description" content={description} />
+  <meta name="theme-color" content="#68152a" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Amal & Greeshma" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:image" content={`${$page.url.origin}/images/Loader_Logo.png`} />
+  <meta property="og:image" content={shareImage} />
+  <meta property="og:image:secure_url" content={shareImage} />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Amal and Greeshma's wedding invitation" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content={`${$page.url.origin}/images/Loader_Logo.png`} />
+  <meta name="twitter:image" content={shareImage} />
+  <meta name="twitter:image:alt" content="Amal and Greeshma's wedding invitation" />
 </svelte:head>
 
 <Loader />
