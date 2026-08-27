@@ -5,25 +5,27 @@
 <section class="events" id="events">
   <div class="container">
     <div class="section-header">
+      <p class="kicker">A day woven with tradition</p>
       <h2>Wedding Events</h2>
       <div class="divider"></div>
     </div>
     <div class="events-timeline">
       {#each events as event, i}
         <div class="event-card">
+          <span class="number">0{i + 1}</span>
           <div class="event-content">
             <h3>{event.name}</h3>
             <div class="event-details">
               <div class="detail-item">
-                <span class="icon">📅</span>
+                <span class="icon">✦</span>
                 <span>{event.date}</span>
               </div>
               <div class="detail-item">
-                <span class="icon">⏰</span>
+                <span class="icon">◷</span>
                 <span>{event.time}</span>
               </div>
               <div class="detail-item">
-                <span class="icon">📍</span>
+                <span class="icon">⌖</span>
                 <span>{event.location}</span>
               </div>
             </div>
@@ -38,7 +40,7 @@
 <style>
   .events {
     padding: 6rem 2rem;
-    background-color: var(--color-bg);
+    background: linear-gradient(135deg, #fff9ed, #fff4df);
   }
   .container {
     max-width: 1000px;
@@ -49,12 +51,12 @@
     margin-bottom: 4rem;
   }
   .section-header h2 {
-    font-size: 2.5rem;
+    font-size: clamp(2.7rem, 5vw, 4rem);
     color: var(--color-accent);
     margin-bottom: 1rem;
   }
   .divider {
-    width: 60px;
+    width: 90px;
     height: 2px;
     background-color: var(--color-primary);
     margin: 0 auto;
@@ -70,13 +72,13 @@
     width: 100%;
     max-width: 600px;
     padding: 2.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-    border-left: 4px solid var(--color-primary);
+    border-radius: 2px;
+    box-shadow: 0 12px 35px rgba(75, 20, 33, .08);
+    border: 1px solid rgba(180, 119, 39, .25);
     transition: var(--transition-smooth);
   }
   .event-card:hover {
-    transform: scale(1.02);
+    transform: translateY(-6px) scale(1.01);
     box-shadow: 0 8px 30px rgba(0,0,0,0.06);
   }
   .event-content h3 {
@@ -84,6 +86,7 @@
     color: var(--color-accent);
     margin-bottom: 1.5rem;
   }
+  .kicker { margin:0 0 .5rem; color:var(--saffron); font-size:.68rem; text-transform:uppercase; letter-spacing:.2em; font-weight:600; }.event-card { position:relative; overflow:hidden; }.number { position:absolute; right:1.5rem; top:1rem; color:rgba(104,21,42,.09); font-family:var(--font-heading); font-size:5rem; font-weight:700; line-height:1; }.event-content { position:relative; }.icon { color:var(--saffron); width:1.2rem; text-align:center; }
   .event-details {
     display: flex;
     flex-direction: column;
@@ -103,12 +106,12 @@
   .btn-map {
     display: inline-block;
     padding: 0.8rem 2rem;
-    background-color: var(--color-primary);
+    background-color: var(--maroon);
     color: #fff;
     font-size: 0.95rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-radius: 4px;
+    border-radius: 0;
     transition: var(--transition-smooth);
   }
   .btn-map:hover {

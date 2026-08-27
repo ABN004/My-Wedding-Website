@@ -14,7 +14,7 @@
 
 <nav class:scrolled>
   <div class="nav-container">
-    <div class="logo">G <span>&</span> A</div>
+    <div class="logo">A <span>&</span> G</div>
     <div class="links">
       <a href="#home">Home</a>
       <a href="#about">Couple</a>

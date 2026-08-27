@@ -1,23 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=DM+Sans:wght@400;500;600&display=swap');
+
 :root {
-  --color-primary: #D4AF37; /* Elegant metallic gold */
-  --color-primary-dark: #B5952F;
-  --color-secondary: #FDFBF7; /* Warm white/cream */
-  --color-accent: #2C3E50; /* Deep blue/slate */
-  --color-text: #333333;
-  --color-text-light: #666666;
-  --color-bg: #FFFFFF;
-  
-  --font-heading: 'Playfair Display', serif;
-  --font-body: 'Outfit', sans-serif;
-  
-  --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --maroon: #68152a; --maroon-deep: #360815; --saffron: #db7325; --gold: #eabf59; --cream: #fff9ed; --sand: #f6e8cb; --ink: #44212a; --muted: #886269;
+  --color-primary: var(--gold); --color-primary-dark: #bd8331; --color-secondary: var(--cream); --color-accent: var(--maroon); --color-text: var(--ink); --color-text-light: var(--muted); --color-bg: var(--cream);
+  --font-heading: 'Cormorant Garamond', Georgia, serif; --font-body: 'DM Sans', sans-serif; --transition-smooth: all .35s cubic-bezier(.2,.7,.2,1);
 }
 
 html {
   scroll-behavior: smooth;
   font-family: var(--font-body);
   color: var(--color-text);
-  background-color: var(--color-bg);
+  background-color: var(--cream);
 }
 
 body {
@@ -41,14 +34,18 @@ a {
   box-sizing: border-box;
 }
 
+button, input, textarea { font: inherit; }
+::selection { background: var(--gold); color: var(--maroon-deep); }
+
 /* Beautiful custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 9px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-secondary);
+  background: var(--sand);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: 4px;
+  background: var(--maroon);
+  border: 2px solid var(--sand);
+  border-radius: 99px;
 }
