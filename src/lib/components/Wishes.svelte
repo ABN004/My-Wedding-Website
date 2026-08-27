@@ -111,29 +111,29 @@
 {#if showModal}
   <div class="modal-overlay" onclick={closeModal}>
     <div class="modal-content" onclick={(e) => e.stopPropagation()}>
-      <button class="close-btn" onclick={closeModal}>&times;</button>
+      <button class="close-btn" onclick={closeModal} disabled={isSubmitting}>&times;</button>
       <h3>Share Your Wishes</h3>
       
       <form onsubmit={handleSubmit}>
         <div class="form-group">
           <label for="name">Your Name</label>
-          <input type="text" id="name" bind:value={name} required placeholder="John & Jane" />
+          <input type="text" id="name" bind:value={name} required placeholder="John & Jane" disabled={isSubmitting} />
         </div>
         
         <div class="form-group">
           <label for="relation">Relation to Couple</label>
-          <input type="text" id="relation" bind:value={relation} required placeholder="Friend of Bride" />
+          <input type="text" id="relation" bind:value={relation} required placeholder="Friend of Bride" disabled={isSubmitting} />
         </div>
         
         <div class="form-group">
           <label for="message">Message (Optional)</label>
-          <textarea id="message" bind:value={message} rows="3" placeholder="Wishing you a lifetime of joy!"></textarea>
+          <textarea id="message" bind:value={message} rows="3" placeholder="Wishing you a lifetime of joy!" disabled={isSubmitting}></textarea>
         </div>
         
         <div class="form-group">
           <label for="image">Upload a Photo</label>
           <div class="file-upload">
-            <input type="file" id="image" accept="image/*" onchange={handleImageChange} required />
+            <input type="file" id="image" accept="image/*" onchange={handleImageChange} required disabled={isSubmitting} />
             {#if previewUrl}
               <div class="image-preview">
                 <img src={previewUrl} alt="Preview" />
@@ -143,9 +143,16 @@
         </div>
         
         <button type="submit" class="submit-btn" disabled={isSubmitting}>
-          {isSubmitting ? 'Sending...' : 'Send Wish'}
+          Send Wish
         </button>
       </form>
+
+      {#if isSubmitting}
+        <div class="submitting-overlay">
+          <img src="/images/Loader_Logo.png" alt="Uploading" class="pulse-logo" />
+          <p>Sending your beautiful wish...</p>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
@@ -373,5 +380,41 @@
   .submit-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+  }
+  
+  /* Submitting Overlay */
+  .submitting-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    text-align: center;
+  }
+  .pulse-logo {
+    width: 120px;
+    height: auto;
+    animation: pulse 2s infinite ease-in-out;
+    margin-bottom: 1.5rem;
+  }
+  .submitting-overlay p {
+    color: var(--color-accent);
+    font-size: 1.2rem;
+    font-family: var(--font-heading);
+    font-style: italic;
+    margin: 0;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
   }
 </style>

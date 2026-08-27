@@ -8,14 +8,15 @@
   import jsonData from '$lib/data.json';
 
   let { data } = $props();
+
+  const title = `${jsonData.bride.name} & ${jsonData.groom.name} - Wedding Invitation`;
+  const description = `Join us to celebrate the wedding of ${jsonData.bride.name} and ${jsonData.groom.name} on ${jsonData.wedding.events[0].date}.`;
+  const image = '/images/Loader_Logo.png';
 </script>
 
 <svelte:head>
-  {@const title = `${jsonData.bride.name} & ${jsonData.groom.name} - Wedding Invitation`}
-  {@const description = `Join us to celebrate the wedding of ${jsonData.bride.name} and ${jsonData.groom.name} on ${jsonData.wedding.events[0].date}.`}
-  {@const image = "/images/Loader_Logo.png"}
-
   <title>{title}</title>
+
   <meta name="description" content={description} />
 
   <!-- Open Graph / Facebook -->
