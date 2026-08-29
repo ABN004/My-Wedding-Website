@@ -26,10 +26,36 @@
   let dragStart = null;
   
   let localWishes = $state(wishes);
+  let activeTab = $state('friend');
+  let visibleWishCount = $state(5);
+  /** @type {HTMLDivElement} */
+  let loadMoreTrigger;
+  let filteredWishes = $derived(
+    localWishes.filter((/** @type {{ relation?: string }} */ wish) => wish.relation?.toLowerCase().includes(activeTab))
+  );
+  let visibleWishes = $derived(filteredWishes.slice(0, visibleWishCount));
 
   $effect(() => {
     localWishes = wishes;
   });
+
+  $effect(() => {
+    if (!loadMoreTrigger || visibleWishCount >= filteredWishes.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) visibleWishCount += 5;
+      },
+      { rootMargin: '220px' }
+    );
+    observer.observe(loadMoreTrigger);
+    return () => observer.disconnect();
+  });
+
+  /** @param {'friend' | 'family'} tab */
+  function selectWishTab(tab) {
+    activeTab = tab;
+    visibleWishCount = 5;
+  }
 
   /** @param {Event} e */
   function handleImageChange(e) {
@@ -215,11 +241,17 @@
       <div class="divider"></div>
       <p class="subtitle">With love from our dearest ones</p>
       <button class="add-wish-btn" onclick={() => showModal = true}>
-        Add Your Wish
+        <span class="wish-button-flower">✿</span>
+        <span><small>Send your blessings</small>Add Your Wish</span>
+        <span class="wish-button-arrow">→</span>
       </button>
     </div>
+    <div class="wish-tabs" role="tablist" aria-label="Wish categories">
+      <button type="button" role="tab" aria-selected={activeTab === 'friend'} class:active={activeTab === 'friend'} onclick={() => selectWishTab('friend')}>Friends</button>
+      <button type="button" role="tab" aria-selected={activeTab === 'family'} class:active={activeTab === 'family'} onclick={() => selectWishTab('family')}>Family</button>
+    </div>
     <div class="wishes-grid">
-      {#each localWishes as wish}
+      {#each visibleWishes as wish}
         <div class="wish-card">
           <div class="img-container">
             <img src={wish.image} alt={wish.name} loading="lazy" />
@@ -236,6 +268,11 @@
         </div>
       {/each}
     </div>
+    {#if !visibleWishes.length}
+      <p class="empty-wishes">No {activeTab} wishes have been shared yet.</p>
+    {:else if visibleWishes.length < filteredWishes.length}
+      <div class="wish-load-trigger" bind:this={loadMoreTrigger} aria-label="Loading more wishes"><span></span><span></span><span></span></div>
+    {/if}
   </div>
 </section>
 
@@ -253,7 +290,11 @@
         
         <div class="form-group">
           <label for="relation">Relation to Couple</label>
-          <input type="text" id="relation" bind:value={relation} required placeholder="Friend of Bride" disabled={isSubmitting} />
+          <select id="relation" bind:value={relation} required disabled={isSubmitting}>
+            <option value="" disabled>Select your relation</option>
+            <option value="friend">Friend</option>
+            <option value="family">Family</option>
+          </select>
         </div>
         
         <div class="form-group">
@@ -333,6 +374,9 @@
     font-style: italic;
     font-family: var(--font-heading);
   }
+  .wish-tabs { display: flex; justify-content: center; gap: .35rem; margin: -1.8rem auto 2.3rem; padding: .28rem; width: max-content; border: 1px solid rgba(104,21,42,.15); border-radius: 99px; background: rgba(255,255,255,.55); }
+  .wish-tabs button { min-width: 105px; padding: .6rem 1rem; border: 0; border-radius: 99px; color: var(--maroon); background: transparent; font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: var(--transition-smooth); }
+  .wish-tabs button.active { color: #fff9ed; background: var(--maroon); box-shadow: 0 4px 12px rgba(104,21,42,.22); }
   .wishes-grid {
     display: flex;
     gap: 2rem;
@@ -351,6 +395,8 @@
     transform: translateY(-10px);
     box-shadow: 0 15px 40px rgba(0,0,0,0.1);
   }
+  .empty-wishes { margin: 1rem auto 0; text-align: center; color: var(--muted); font-family: var(--font-heading); font-size: 1.2rem; font-style: italic; }
+  .wish-load-trigger { display: flex; justify-content: center; gap: .35rem; height: 52px; padding-top: 1.7rem; }.wish-load-trigger span { width: 7px; height: 7px; border-radius: 50%; background: var(--saffron); animation: wishDot 1s ease-in-out infinite; }.wish-load-trigger span:nth-child(2) { animation-delay: .12s; }.wish-load-trigger span:nth-child(3) { animation-delay: .24s; }@keyframes wishDot { 50% { transform: translateY(-5px); opacity: .45; } }
   .img-container {
     width: 100%;
     height: 350px;
@@ -387,23 +433,34 @@
     line-height: 1.4;
   }
   .add-wish-btn {
-    margin-top: 1.5rem;
-    padding: 0.8rem 2rem;
-    background: var(--color-primary);
-    color: white;
-    border: none;
-    border-radius: 30px;
-    font-size: 1.1rem;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: .7rem;
+    margin-top: 1.65rem;
+    padding: .62rem 1.1rem .62rem .8rem;
+    color: #fff9ed;
+    border: 1px solid var(--gold);
+    border-radius: 99px;
+    background: linear-gradient(110deg, var(--maroon-deep), var(--maroon) 58%, #8f263f);
+    font-size: 1.08rem;
     cursor: pointer;
     font-family: var(--font-heading);
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+    text-align: left;
+    transition: transform .3s ease, box-shadow .3s ease, background .3s ease;
+    box-shadow: 0 9px 24px rgba(104,21,42,.32), 0 0 0 5px rgba(234,191,89,.13);
   }
+  .add-wish-btn::before { content: ''; position: absolute; z-index: -1; inset: 0; background: linear-gradient(115deg, transparent 28%, rgba(255,255,255,.24) 48%, transparent 67%); transform: translateX(-120%); transition: transform .65s ease; }
+  .add-wish-btn small { display: block; margin-bottom: .05rem; color: var(--gold); font-family: var(--font-body); font-size: .56rem; font-weight: 700; letter-spacing: .17em; text-transform: uppercase; }
+  .wish-button-flower { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid rgba(234,191,89,.75); border-radius: 50%; color: var(--gold); font-size: 1.05rem; animation: wishFlowerGlow 2.4s ease-in-out infinite; }
+  .wish-button-arrow { color: var(--gold); font-family: var(--font-body); font-size: 1.35rem; transition: transform .3s ease; }
   .add-wish-btn:hover {
-    transform: translateY(-2px);
-    background: var(--color-accent);
-    box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+    transform: translateY(-4px) scale(1.015);
+    box-shadow: 0 14px 28px rgba(104,21,42,.38), 0 0 0 6px rgba(234,191,89,.19);
   }
+  .add-wish-btn:hover::before { transform: translateX(120%); }.add-wish-btn:hover .wish-button-arrow { transform: translateX(4px); }.add-wish-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }@keyframes wishFlowerGlow { 50% { transform: rotate(18deg) scale(1.12); text-shadow: 0 0 10px var(--gold); } }
   
   /* Modal Styles */
   .modal-overlay {
@@ -467,7 +524,8 @@
     font-weight: 500;
   }
   .form-group input[type="text"],
-  .form-group textarea {
+  .form-group textarea,
+  .form-group select {
     width: 100%;
     padding: 0.8rem 1rem;
     border: 1px solid #ddd;
@@ -478,7 +536,8 @@
     transition: all 0.3s;
   }
   .form-group input[type="text"]:focus,
-  .form-group textarea:focus {
+  .form-group textarea:focus,
+  .form-group select:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
@@ -582,7 +641,8 @@
     .form-group { margin-bottom: 0.55rem; }
     .form-group label { margin-bottom: 0.2rem; font-size: 0.82rem; }
     .form-group input[type="text"],
-    .form-group textarea { padding: 0.5rem 0.7rem; font-size: 0.88rem; }
+    .form-group textarea,
+    .form-group select { padding: 0.5rem 0.7rem; font-size: 0.88rem; }
     .form-group textarea { height: 48px; min-height: 48px; resize: none; }
     .file-upload { gap: 0.4rem; }
     .file-upload input[type="file"] { padding: 0.32rem; font-size: 0.76rem; }
