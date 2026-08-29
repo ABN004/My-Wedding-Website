@@ -9,6 +9,17 @@
   let relation = $state('');
   let message = $state('');
   let imageFile = $state(null);
+  let imageInput;
+  let cropperOpen = $state(false);
+  let cropSourceUrl = $state('');
+  let cropViewport;
+  let cropImageWidth = 0;
+  let cropImageHeight = 0;
+  let cropScale = $state(1);
+  let cropBaseScale = 1;
+  let cropX = $state(0);
+  let cropY = $state(0);
+  let dragStart = null;
   
   let localWishes = $state(wishes);
 
@@ -16,12 +27,106 @@
     localWishes = wishes;
   });
 
+  /** @param {Event} e */
   function handleImageChange(e) {
-    const file = e.target.files[0];
+    const file = /** @type {HTMLInputElement} */ (e.currentTarget).files?.[0];
     if (file) {
-      imageFile = file;
-      previewUrl = URL.createObjectURL(file);
+      if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+      cropSourceUrl = URL.createObjectURL(file);
+      cropperOpen = true;
     }
+  }
+
+  function initialiseCropper() {
+    if (!cropViewport || !cropImageWidth || !cropImageHeight) return;
+    cropBaseScale = Math.max(cropViewport.clientWidth / cropImageWidth, cropViewport.clientHeight / cropImageHeight);
+    cropScale = 1;
+    const width = cropImageWidth * cropBaseScale;
+    const height = cropImageHeight * cropBaseScale;
+    cropX = (cropViewport.clientWidth - width) / 2;
+    cropY = (cropViewport.clientHeight - height) / 2;
+  }
+
+  /** @param {Event} e */
+  function cropImageLoaded(e) {
+    const image = /** @type {HTMLImageElement} */ (e.currentTarget);
+    cropImageWidth = image.naturalWidth;
+    cropImageHeight = image.naturalHeight;
+    requestAnimationFrame(initialiseCropper);
+  }
+
+  function constrainCrop(x, y) {
+    const scale = cropBaseScale * cropScale;
+    const width = cropImageWidth * scale;
+    const height = cropImageHeight * scale;
+    return {
+      x: Math.min(0, Math.max(cropViewport.clientWidth - width, x)),
+      y: Math.min(0, Math.max(cropViewport.clientHeight - height, y))
+    };
+  }
+
+  /** @param {PointerEvent} e */
+  function startDragging(e) {
+    dragStart = { x: e.clientX, y: e.clientY, cropX, cropY };
+    cropViewport.setPointerCapture(e.pointerId);
+  }
+
+  /** @param {PointerEvent} e */
+  function dragCrop(e) {
+    if (!dragStart) return;
+    const position = constrainCrop(dragStart.cropX + e.clientX - dragStart.x, dragStart.cropY + e.clientY - dragStart.y);
+    cropX = position.x;
+    cropY = position.y;
+  }
+
+  function stopDragging() { dragStart = null; }
+
+  /** @param {Event} e */
+  function updateZoom(e) {
+    const nextZoom = Number(/** @type {HTMLInputElement} */ (e.currentTarget).value);
+    const oldWidth = cropImageWidth * cropBaseScale * cropScale;
+    const oldHeight = cropImageHeight * cropBaseScale * cropScale;
+    const centerX = (cropViewport.clientWidth / 2 - cropX) / oldWidth;
+    const centerY = (cropViewport.clientHeight / 2 - cropY) / oldHeight;
+    cropScale = nextZoom;
+    const newWidth = cropImageWidth * cropBaseScale * cropScale;
+    const newHeight = cropImageHeight * cropBaseScale * cropScale;
+    const position = constrainCrop(cropViewport.clientWidth / 2 - centerX * newWidth, cropViewport.clientHeight / 2 - centerY * newHeight);
+    cropX = position.x;
+    cropY = position.y;
+  }
+
+  async function applyCrop() {
+    const image = new Image();
+    image.src = cropSourceUrl;
+    await image.decode();
+    const displayedWidth = cropImageWidth * cropBaseScale * cropScale;
+    const displayedHeight = cropImageHeight * cropBaseScale * cropScale;
+    const sourceX = Math.max(0, (-cropX / displayedWidth) * cropImageWidth);
+    const sourceY = Math.max(0, (-cropY / displayedHeight) * cropImageHeight);
+    const sourceWidth = (cropViewport.clientWidth / displayedWidth) * cropImageWidth;
+    const sourceHeight = (cropViewport.clientHeight / displayedHeight) * cropImageHeight;
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 600;
+    const context = canvas.getContext('2d');
+    context?.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    if (!blob) return;
+    const croppedFile = new File([blob], 'wedding-wish.jpg', { type: 'image/jpeg' });
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    imageFile = croppedFile;
+    previewUrl = URL.createObjectURL(croppedFile);
+    URL.revokeObjectURL(cropSourceUrl);
+    cropSourceUrl = '';
+    cropperOpen = false;
+  }
+
+  function cancelCrop() {
+    if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+    cropSourceUrl = '';
+    cropperOpen = false;
+    if (imageInput) imageInput.value = '';
   }
 
   async function handleSubmit(e) {
@@ -133,7 +238,7 @@
         <div class="form-group">
           <label for="image">Upload a Photo</label>
           <div class="file-upload">
-            <input type="file" id="image" accept="image/*" onchange={handleImageChange} required disabled={isSubmitting} />
+            <input bind:this={imageInput} type="file" id="image" accept="image/*" onchange={handleImageChange} required disabled={isSubmitting} />
             {#if previewUrl}
               <div class="image-preview">
                 <img src={previewUrl} alt="Preview" />
@@ -153,6 +258,21 @@
           <p>Sending your beautiful wish...</p>
         </div>
       {/if}
+    </div>
+  </div>
+{/if}
+
+{#if cropperOpen}
+  <div class="cropper-overlay" role="dialog" aria-modal="true" aria-label="Crop your photo">
+    <div class="cropper-panel">
+      <div class="cropper-heading"><div><p>Make it yours</p><h3>Crop your photo</h3></div><button type="button" class="crop-cancel-icon" onclick={cancelCrop} aria-label="Cancel crop">×</button></div>
+      <div class="crop-viewport" bind:this={cropViewport} onpointerdown={startDragging} onpointermove={dragCrop} onpointerup={stopDragging} onpointercancel={stopDragging}>
+        <img class="crop-source" src={cropSourceUrl} alt="Photo being cropped" onload={cropImageLoaded} draggable="false" style={`left:${cropX}px;top:${cropY}px;width:${cropImageWidth * cropBaseScale * cropScale}px`} />
+        <div class="crop-grid" aria-hidden="true"></div>
+      </div>
+      <label class="zoom-control"><span>−</span><input type="range" min="1" max="2.8" step="0.01" value={cropScale} oninput={updateZoom} aria-label="Zoom photo" /><span>＋</span></label>
+      <p class="crop-help">Drag to position your photo · pinch-style zoom control</p>
+      <div class="crop-actions"><button type="button" class="crop-cancel" onclick={cancelCrop}>Cancel</button><button type="button" class="crop-apply" onclick={applyCrop}>Use this photo</button></div>
     </div>
   </div>
 {/if}
@@ -262,10 +382,11 @@
   /* Modal Styles */
   .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
+    padding: 1rem;
+    overflow: hidden;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(5px);
     display: flex;
@@ -279,6 +400,8 @@
     border-radius: 16px;
     width: 90%;
     max-width: 500px;
+    max-height: calc(100dvh - 2rem);
+    overflow: hidden;
     position: relative;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
     animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -348,8 +471,11 @@
     cursor: pointer;
   }
   .image-preview {
-    width: 100%;
-    height: 200px;
+    height: 120px;
+    width: auto;
+    aspect-ratio: 4 / 3;
+    align-self: center;
+    max-width: 100%;
     border-radius: 8px;
     overflow: hidden;
     border: 2px solid var(--color-primary);
@@ -417,4 +543,38 @@
     50% { transform: scale(1.05); opacity: 1; }
     100% { transform: scale(0.95); opacity: 0.8; }
   }
+  @media (max-width: 600px) {
+    .modal-overlay { padding: 0.5rem; align-items: center; }
+    .modal-content {
+      width: 100%;
+      max-height: calc(100dvh - 1rem);
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+    }
+    .close-btn { top: 0.35rem; right: 0.85rem; font-size: 1.65rem; }
+    .modal-content h3 { margin: 0 1.5rem 0.85rem 0; font-size: 1.65rem; }
+    .form-group { margin-bottom: 0.55rem; }
+    .form-group label { margin-bottom: 0.2rem; font-size: 0.82rem; }
+    .form-group input[type="text"],
+    .form-group textarea { padding: 0.5rem 0.7rem; font-size: 0.88rem; }
+    .form-group textarea { height: 48px; min-height: 48px; resize: none; }
+    .file-upload { gap: 0.4rem; }
+    .file-upload input[type="file"] { padding: 0.32rem; font-size: 0.76rem; }
+    .image-preview { height: 64px; border-width: 1px; }
+    .submit-btn { padding: 0.58rem; font-size: 1rem; }
+  }
+  @media (max-height: 560px) and (max-width: 600px) {
+    .modal-content { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+    .modal-content h3 { margin-bottom: 0.5rem; font-size: 1.4rem; }
+    .form-group { margin-bottom: 0.35rem; }
+    .form-group label { display: none; }
+    .image-preview { height: 46px; }
+    .form-group textarea { height: 38px; min-height: 38px; }
+  }
+  .cropper-overlay { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 1rem; background: rgba(32, 3, 12, .82); backdrop-filter: blur(10px); }
+  .cropper-panel { width: min(100%, 480px); padding: 1.15rem; border: 1px solid rgba(234, 191, 89, .45); border-radius: 18px; background: #fff9ed; box-shadow: 0 24px 80px rgba(0,0,0,.35); }
+  .cropper-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: .8rem; }.cropper-heading p { margin: 0 0 .05rem; color: var(--saffron); text-transform: uppercase; letter-spacing: .13em; font-size: .62rem; font-weight: 700; }.cropper-heading h3 { margin: 0; color: var(--maroon); font-size: 1.7rem; }.crop-cancel-icon { border: 0; background: transparent; color: var(--muted); font-size: 2rem; line-height: 1; cursor: pointer; }
+  .crop-viewport { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; background: #32101a; touch-action: none; user-select: none; cursor: grab; }.crop-viewport:active { cursor: grabbing; }.crop-source { position: absolute; max-width: none; height: auto; pointer-events: none; }.crop-grid { position: absolute; inset: 0; pointer-events: none; border: 1px solid rgba(255,255,255,.8); background: linear-gradient(to right, transparent 33%, rgba(255,255,255,.42) 33.4%, transparent 33.8%, transparent 66%, rgba(255,255,255,.42) 66.4%, transparent 66.8%), linear-gradient(to bottom, transparent 33%, rgba(255,255,255,.42) 33.4%, transparent 33.8%, transparent 66%, rgba(255,255,255,.42) 66.4%, transparent 66.8%); box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+  .zoom-control { display: flex; align-items: center; gap: .6rem; margin: 1rem .15rem .55rem; color: var(--maroon); font-size: 1.15rem; }.zoom-control input { flex: 1; accent-color: var(--maroon); }.crop-help { margin: 0; text-align: center; color: var(--muted); font-size: .73rem; }.crop-actions { display: flex; gap: .65rem; margin-top: 1rem; }.crop-actions button { flex: 1; border-radius: 99px; padding: .75rem 1rem; font-weight: 700; cursor: pointer; }.crop-cancel { border: 1px solid rgba(104,21,42,.3); color: var(--maroon); background: transparent; }.crop-apply { border: 1px solid var(--maroon); color: #fff; background: var(--maroon); }
+  @media (max-width: 600px) { .cropper-overlay { padding: .6rem; }.cropper-panel { padding: .9rem; border-radius: 14px; }.cropper-heading h3 { font-size: 1.45rem; }.crop-viewport { max-height: 55dvh; }.crop-actions button { padding: .65rem .7rem; }.zoom-control { margin-top: .75rem; } }
 </style>
