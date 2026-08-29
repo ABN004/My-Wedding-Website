@@ -24,6 +24,7 @@
 
   const petalColors = ['#a9102c', '#d43562', '#f0c52d', '#fff8e8'];
 
+  /** @param {number} count @param {number} wave */
   function makePetals(count, wave) {
     return Array.from({ length: count }, (_, index) => ({
       id: wave * 100 + index,

@@ -8,17 +8,21 @@
   let name = $state('');
   let relation = $state('');
   let message = $state('');
+  /** @type {File | null} */
   let imageFile = $state(null);
+  /** @type {HTMLInputElement} */
   let imageInput;
   let cropperOpen = $state(false);
   let cropSourceUrl = $state('');
+  /** @type {HTMLDivElement} */
   let cropViewport;
-  let cropImageWidth = 0;
-  let cropImageHeight = 0;
+  let cropImageWidth = $state(0);
+  let cropImageHeight = $state(0);
   let cropScale = $state(1);
-  let cropBaseScale = 1;
+  let cropBaseScale = $state(1);
   let cropX = $state(0);
   let cropY = $state(0);
+  /** @type {{ x: number; y: number; cropX: number; cropY: number } | null} */
   let dragStart = null;
   
   let localWishes = $state(wishes);
@@ -32,6 +36,11 @@
     const file = /** @type {HTMLInputElement} */ (e.currentTarget).files?.[0];
     if (file) {
       if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+      cropImageWidth = 0;
+      cropImageHeight = 0;
+      cropScale = 1;
+      cropX = 0;
+      cropY = 0;
       cropSourceUrl = URL.createObjectURL(file);
       cropperOpen = true;
     }
@@ -55,6 +64,7 @@
     requestAnimationFrame(initialiseCropper);
   }
 
+  /** @param {number} x @param {number} y */
   function constrainCrop(x, y) {
     const scale = cropBaseScale * cropScale;
     const width = cropImageWidth * scale;
@@ -96,10 +106,22 @@
     cropY = position.y;
   }
 
+  /** @param {HTMLCanvasElement} canvas @returns {Promise<Blob | null>} */
+  function canvasToJpeg(canvas) {
+    return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+  }
+
   async function applyCrop() {
     const image = new Image();
     image.src = cropSourceUrl;
-    await image.decode();
+    try {
+      await image.decode();
+    } catch {
+      imageFile = null;
+      alert('We could not process this image. Please choose another photo.');
+      cancelCrop();
+      return;
+    }
     const displayedWidth = cropImageWidth * cropBaseScale * cropScale;
     const displayedHeight = cropImageHeight * cropBaseScale * cropScale;
     const sourceX = Math.max(0, (-cropX / displayedWidth) * cropImageWidth);
@@ -111,7 +133,7 @@
     canvas.height = 600;
     const context = canvas.getContext('2d');
     context?.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    const blob = await canvasToJpeg(canvas);
     if (!blob) return;
     const croppedFile = new File([blob], 'wedding-wish.jpg', { type: 'image/jpeg' });
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -129,6 +151,7 @@
     if (imageInput) imageInput.value = '';
   }
 
+  /** @param {SubmitEvent} e */
   async function handleSubmit(e) {
     e.preventDefault();
     if (!name || !relation || !imageFile) return;
@@ -180,6 +203,9 @@
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = '';
   }
+
+  /** @param {MouseEvent} e */
+  function stopModalClick(e) { e.stopPropagation(); }
 </script>
 
 <section class="wishes" id="wishes">
@@ -215,7 +241,7 @@
 
 {#if showModal}
   <div class="modal-overlay" onclick={closeModal}>
-    <div class="modal-content" onclick={(e) => e.stopPropagation()}>
+    <div class="modal-content" onclick={stopModalClick}>
       <button class="close-btn" onclick={closeModal} disabled={isSubmitting}>&times;</button>
       <h3>Share Your Wishes</h3>
       
